@@ -10,13 +10,13 @@ let obstacles = [];
 let yeti = null;
 let yetiSpawnDistance = 2000;
 
-// Update these variables
+// Speed variables
 const initialSpeed = 5;
 const initialSpeedKmh = 20;
 const speedIncreaseInterval = 1000; // Increase speed every 1000 distance units
 const speedIncreaseAmount = 0.1;
 
-// Add this variable
+// Current speed
 let currentSpeedKmh = initialSpeedKmh;
 
 // Skier object
@@ -27,8 +27,20 @@ const skier = {
     height: 40,
     speed: initialSpeed,
     dx: 0,
-    direction: 'left' // Add this line to set initial direction
+    direction: 'left' // Initial direction
 };
+
+// Function to resize canvas
+function resizeCanvas() {
+    canvas.width = canvas.clientWidth;
+    canvas.height = canvas.clientHeight;
+    skier.x = canvas.width / 2;
+    skier.y = canvas.height - 100;
+}
+
+// Call resizeCanvas once at the start and add an event listener for window resize
+resizeCanvas();
+window.addEventListener('resize', resizeCanvas);
 
 // Obstacle class
 class Obstacle {
@@ -64,7 +76,7 @@ class Yeti {
         this.y = -100;
         this.width = 40;
         this.height = 60;
-        this.speed = skier.speed * 0.75; // Reduced speed to 75% of skier's speed
+        this.speed = skier.speed * 0.75; // 75% of skier's speed
     }
 
     draw() {
@@ -147,7 +159,7 @@ function checkCollision() {
 }
 
 function clearCanvas() {
-    ctx.fillStyle = 'white';
+    ctx.fillStyle = 'white'; // Change this to white
     ctx.fillRect(0, 0, canvas.width, canvas.height);
 }
 
@@ -165,8 +177,8 @@ function moveSkier() {
 
 function updateScore() {
     score = Math.floor(distance / 10);
-    document.getElementById('score').innerText = score;
-    updateSpeedDisplay(); // Add this line to update speed display
+    document.getElementById('scoreValue').innerText = score;
+    updateSpeedDisplay(); // Update speed display
 }
 
 function updateSpeed() {
@@ -176,21 +188,23 @@ function updateSpeed() {
 }
 
 function updateSpeedDisplay() {
-    document.getElementById('speed').innerText = Math.round(currentSpeedKmh);
+    document.getElementById('speedValue').innerText = Math.round(currentSpeedKmh);
 }
 
 function update() {
+    clearCanvas(); // Clear the canvas at the start of each frame
+
     if (gameOver) {
         // Display Game Over message
         ctx.fillStyle = 'black';
         ctx.font = '48px Arial';
-        ctx.fillText('Game Over', canvas.width / 2 - 120, canvas.height / 2);
+        ctx.textAlign = 'center';
+        ctx.fillText('Game Over', canvas.width / 2, canvas.height / 2 - 20);
         ctx.font = '24px Arial';
-        ctx.fillText('Press Enter to Restart', canvas.width / 2 - 130, canvas.height / 2 + 40);
+        ctx.fillText('Tap to Restart', canvas.width / 2, canvas.height / 2 + 40);
         return;
     }
 
-    clearCanvas();
     updateSpeed();
     moveSkier();
     drawSkier();
@@ -202,11 +216,9 @@ function update() {
     updateScore();
 
     // Spawn yeti logic
-    if (distance > yetiSpawnDistance) {
-        if (!yeti || yeti.y > canvas.height) {
-            yeti = new Yeti();
-            yetiSpawnDistance = distance + 2000 + Math.random() * 1000;
-        }
+    if (distance > yetiSpawnDistance && (!yeti || yeti.y > canvas.height)) {
+        yeti = new Yeti();
+        yetiSpawnDistance = distance + 2000 + Math.random() * 1000;
     }
 
     if (yeti) {
@@ -222,40 +234,19 @@ function update() {
     requestAnimationFrame(update);
 }
 
-function resetGame() {
-    gameOver = false;
-    score = 0;
-    distance = 0;
-    frame = 0;
-    obstacles = [];
-    yeti = null;
-    yetiSpawnDistance = 2000; // Reset yeti spawn distance
-    skier.x = canvas.width / 2;
-    skier.speed = initialSpeed; // Reset speed to initial value
-    currentSpeedKmh = initialSpeedKmh; // Reset speed to initial value
-    updateSpeedDisplay(); // Update speed display
-    update();
-}
-
+// Add event listeners for keyboard controls
 function keyDown(e) {
-    if (e.key === 'ArrowRight' || e.key === 'd') {
-        skier.dx = skier.speed;
-        skier.direction = 'right'; // Add this line
-    } else if (e.key === 'ArrowLeft' || e.key === 'a') {
+    if (e.key === 'ArrowLeft') {
         skier.dx = -skier.speed;
-        skier.direction = 'left'; // Add this line
-    } else if (e.key === 'Enter' && gameOver) {
-        resetGame();
+        skier.direction = 'left';
+    } else if (e.key === 'ArrowRight') {
+        skier.dx = skier.speed;
+        skier.direction = 'right';
     }
 }
 
 function keyUp(e) {
-    if (
-        e.key === 'ArrowRight' ||
-        e.key === 'd' ||
-        e.key === 'ArrowLeft' ||
-        e.key === 'a'
-    ) {
+    if (e.key === 'ArrowLeft' || e.key === 'ArrowRight') {
         skier.dx = 0;
     }
 }
@@ -263,60 +254,70 @@ function keyUp(e) {
 document.addEventListener('keydown', keyDown);
 document.addEventListener('keyup', keyUp);
 
+// Add event listener for Enter key to restart the game
+document.addEventListener('keydown', function(e) {
+    if (e.key === 'Enter' && gameOver) {
+        resetGame();
+        update();
+    }
+});
+
+// Function to reset the game
+function resetGame() {
+    gameOver = false;
+    score = 0;
+    distance = 0;
+    frame = 0;
+    obstacles = [];
+    yeti = null;
+    yetiSpawnDistance = 2000;
+    skier.x = canvas.width / 2;
+    skier.y = canvas.height - 100;
+    skier.speed = initialSpeed;
+    currentSpeedKmh = initialSpeedKmh;
+    updateSpeedDisplay();
+}
+
 // Add touch control variables
 let touchStartX = 0;
-let touchStartY = 0;
+let touchEndX = 0;
 
-// Add touch event listeners
+// Add touch event listeners for touch controls
 canvas.addEventListener('touchstart', handleTouchStart, false);
 canvas.addEventListener('touchmove', handleTouchMove, false);
 canvas.addEventListener('touchend', handleTouchEnd, false);
 
 function handleTouchStart(event) {
-    event.preventDefault();
     touchStartX = event.touches[0].clientX;
-    touchStartY = event.touches[0].clientY;
 }
 
 function handleTouchMove(event) {
-    event.preventDefault();
-    if (!touchStartX || !touchStartY) {
-        return;
+    event.preventDefault(); // Prevent scrolling while touching the canvas
+    touchEndX = event.touches[0].clientX;
+    let touchDiff = touchEndX - touchStartX;
+
+    if (touchDiff > 50) { // Threshold to prevent accidental moves
+        skier.dx = skier.speed;
+        skier.direction = 'right';
+        touchStartX = touchEndX;
+    } else if (touchDiff < -50) {
+        skier.dx = -skier.speed;
+        skier.direction = 'left';
+        touchStartX = touchEndX;
     }
-
-    let touchEndX = event.touches[0].clientX;
-    let touchEndY = event.touches[0].clientY;
-
-    let dx = touchEndX - touchStartX;
-    let dy = touchEndY - touchStartY;
-
-    // Adjust player position based on touch movement
-    skier.x += dx * 0.5; // Adjust sensitivity as needed
-    skier.y += dy * 0.5;
-
-    // Keep player within canvas bounds
-    skier.x = Math.max(0, Math.min(skier.x, canvas.width - skier.width));
-    skier.y = Math.max(0, Math.min(skier.y, canvas.height - skier.height));
-
-    touchStartX = touchEndX;
-    touchStartY = touchEndY;
 }
 
 function handleTouchEnd(event) {
-    touchStartX = null;
-    touchStartY = null;
+    skier.dx = 0;
+    touchStartX = 0;
+    touchEndX = 0;
 }
 
-// Modify the existing keydown event listener
-document.addEventListener('keydown', function(event) {
-    if (event.key === 'ArrowLeft') {
-        skier.moveLeft();
-    } else if (event.key === 'ArrowRight') {
-        skier.moveRight();
-    } else if (event.key === 'ArrowUp') {
-        skier.moveUp();
-    } else if (event.key === 'ArrowDown') {
-        skier.moveDown();
+// Modify the event listener for restarting the game to include touch
+canvas.addEventListener('click', function(e) {
+    if (gameOver) {
+        resetGame();
+        update();
     }
 });
 
