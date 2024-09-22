@@ -263,5 +263,62 @@ function keyUp(e) {
 document.addEventListener('keydown', keyDown);
 document.addEventListener('keyup', keyUp);
 
+// Add touch control variables
+let touchStartX = 0;
+let touchStartY = 0;
+
+// Add touch event listeners
+canvas.addEventListener('touchstart', handleTouchStart, false);
+canvas.addEventListener('touchmove', handleTouchMove, false);
+canvas.addEventListener('touchend', handleTouchEnd, false);
+
+function handleTouchStart(event) {
+    event.preventDefault();
+    touchStartX = event.touches[0].clientX;
+    touchStartY = event.touches[0].clientY;
+}
+
+function handleTouchMove(event) {
+    event.preventDefault();
+    if (!touchStartX || !touchStartY) {
+        return;
+    }
+
+    let touchEndX = event.touches[0].clientX;
+    let touchEndY = event.touches[0].clientY;
+
+    let dx = touchEndX - touchStartX;
+    let dy = touchEndY - touchStartY;
+
+    // Adjust player position based on touch movement
+    skier.x += dx * 0.5; // Adjust sensitivity as needed
+    skier.y += dy * 0.5;
+
+    // Keep player within canvas bounds
+    skier.x = Math.max(0, Math.min(skier.x, canvas.width - skier.width));
+    skier.y = Math.max(0, Math.min(skier.y, canvas.height - skier.height));
+
+    touchStartX = touchEndX;
+    touchStartY = touchEndY;
+}
+
+function handleTouchEnd(event) {
+    touchStartX = null;
+    touchStartY = null;
+}
+
+// Modify the existing keydown event listener
+document.addEventListener('keydown', function(event) {
+    if (event.key === 'ArrowLeft') {
+        skier.moveLeft();
+    } else if (event.key === 'ArrowRight') {
+        skier.moveRight();
+    } else if (event.key === 'ArrowUp') {
+        skier.moveUp();
+    } else if (event.key === 'ArrowDown') {
+        skier.moveDown();
+    }
+});
+
 // Start the game
 update();
