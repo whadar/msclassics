@@ -192,19 +192,18 @@ function updateSpeedDisplay() {
 }
 
 function update() {
-    clearCanvas(); // Clear the canvas at the start of each frame
 
     if (gameOver) {
         // Display Game Over message
         ctx.fillStyle = 'black';
         ctx.font = '48px Arial';
         ctx.textAlign = 'center';
-        ctx.fillText('Game Over', canvas.width / 2, canvas.height / 2 - 20);
+        ctx.fillText('Game Over!', canvas.width / 2, canvas.height / 2 - 20);
         ctx.font = '24px Arial';
         ctx.fillText('Tap to Restart', canvas.width / 2, canvas.height / 2 + 40);
         return;
     }
-
+    clearCanvas(); // Clear the canvas at the start of each frame
     updateSpeed();
     moveSkier();
     drawSkier();
